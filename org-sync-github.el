@@ -176,6 +176,7 @@ org-sync-github-auth. AUTH is a cons (\"user\" . \"pwd\")."
 (defun org-sync-github-fetch-json-page (url)
   "Return a cons (JSON object from URL . next page url)."
   (let ((download-buffer (org-sync-github-url-retrieve-synchronously url))
+        mycontent
         page-next
         header-end
         ret)
@@ -195,7 +196,8 @@ org-sync-github-auth. AUTH is a cons (\"user\" . \"pwd\")."
         (setq page-next (match-string 1)))
 
       (goto-char header-end)
-      (setq ret (cons (json-read) page-next))
+      (setq mycontent (decode-coding-string (buffer-substring header-end (point-max)) 'utf-8))
+      (setq ret (cons (json-read-from-string mycontent) page-next))
       (kill-buffer)
       ret)))
 
