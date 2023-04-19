@@ -261,7 +261,6 @@ Return the server decoded JSON response."
 
 (defun org-sync-github-bug-to-json (bug)
   "Return BUG as JSON."
-  (message "bugs1:---- %s" bug)
   (let ((state (org-sync-get-prop :status bug)))
     (unless (member state '(open closed))
       (error "Github: unsupported state \"%s\"" (symbol-name state))))
