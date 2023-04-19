@@ -204,9 +204,11 @@ org-sync-github-auth. AUTH is a cons (\"user\" . \"pwd\")."
 (defun org-sync-github-request (method url &optional data)
   "Send HTTP request at URL using METHOD with DATA.
 Return the server decoded JSON response."
-  (message "%s %s %s" method url (prin1-to-string data))
+  (message "zhe2:%s %s %s" method url (prin1-to-string data))
   (let* ((url-request-method method)
          (url-request-data data)
+         (url-request-extra-headers '(("Accept-Encoding" . "utf-8")
+                                      ("Content-Type" . " application/json; charset=utf-8")))
          (buf (org-sync-github-url-retrieve-synchronously url)))
 
     (with-current-buffer buf
@@ -259,16 +261,30 @@ Return the server decoded JSON response."
 
 (defun org-sync-github-bug-to-json (bug)
   "Return BUG as JSON."
+  (message "bugs1:---- %s" bug)
   (let ((state (org-sync-get-prop :status bug)))
     (unless (member state '(open closed))
-      (error "Github: unsupported state \"%s\"" (symbol-name state)))
+      (error "Github: unsupported state \"%s\"" (symbol-name state))))
 
-  (json-encode
-   `((title . ,(org-sync-get-prop :title bug))
-     (body . ,(org-sync-get-prop :desc bug))
-     (assignee . ,(org-sync-get-prop :assignee bug))
-     (state . ,(symbol-name (org-sync-get-prop :status bug)))
-     (labels . [ ,@(org-sync-get-prop :tags bug) ])))))
+  (let* ((title (org-sync-get-prop :title bug))
+         (body (org-sync-get-prop :desc bug))
+         (assignee (org-sync-get-prop :assignee bug))
+         (status (symbol-name (org-sync-get-prop :status bug)))
+         (tags (org-sync-get-prop :tags bug)))
+    (setq title (decode-coding-string title 'utf-8))
+    (setq body (decode-coding-string body 'utf-8))
+    (setq assignee assignee)
+
+    (let ((json-str
+           (json-encode
+            `((title . ,title)
+              (body . ,body)
+              (assignee . ,assignee)
+              (state . ,status)
+              (labels . [,@tags])))))
+      ;; 格式化为utf-8
+      (encode-coding-string json-str 'utf-8)
+      )))
 
 (provide 'org-sync-github)
 ;;; org-sync-github.el ends here
